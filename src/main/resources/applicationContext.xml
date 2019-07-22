@@ -8,4 +8,24 @@
             <value>Sping</value>
         </property>
     </bean>
+
+    <bean id="zhangGa" class="cn.KeTang.Greeting">
+        <property name="ren">
+            <value>张嘎</value>
+        </property>
+        <property name="neirong">
+            <value>“三天不打小鬼子，手都痒痒！”</value>
+        </property>
+    </bean>
+
+
+    <bean id="rod" class="cn.KeTang.Greeting">
+        <property name="ren">
+            <value>Rod</value>
+        </property>
+        <property name="neirong">
+            <value>“世界上有10种人，认识二进制的和不认识二进制的.”</value>
+        </property>
+    </bean>
+
 </beans>
