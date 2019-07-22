@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="cn.smbms.dao.user.UserMapper">
+
+	<!-- 查询用户表记录数 -->
+	<select id="count" resultType="int">
+		select count(1) as count from smbms_user
+	</select>
+
+	<!-- 查询用户表列表
+	<select id="getUserList" resultType="User" parameterType="User">
+		select u.*,r.roleName as UserRoleName from smbms_user u,smbms_role r
+		where userName like concat('%',#{userName},'%')
+		and userRole=#{userRole} and r.id=u.userRole
+		
+	</select>-->
+
+
+	<select id="getUserList" resultType="User" parameterType="User">
+		select u.*,r.roleName as UserRoleName from smbms_user u,smbms_role r
+		where r.id=u.userRole
+		<if test="userRole!=null">
+			and userRole=#{userRole}
+		</if>
+		<if test="userName!=null and userName!=''">
+		    and  userName like concat('%',#{userName},'%')
+		</if>
+	</select>
+
+	<!-- 增加用户 -->
+<insert id="add" parameterType="User">
+	insert into smbms_user (userCode,userName,userPassword,gender,birthday,phone,address,userRole,createdBy,creationDate)
+	values(#{userCode},#{userName},#{userPassword},#{gender},#{birthday},#{phone},#{address},#{userRole},#{createdBy},#{creationDate})
+</insert>
+
+	<!-- 修改用户 -->
+	<update id="update" parameterType="User">
+		update smbms_user set userCode=#{userCode},userName=#{userName},userPassword=#{userPassword},gender=#{gender},birthday=#{birthday},phone=#{phone},address=#{address},
+		userRole=#{userRole},modifyBy=#{modifyBy},modifyDate=#{modifyDate}where id = #{id}
+	</update>
+
+
+	<!-- 删除用户 -->
+	<delete id="delete" parameterType="User">
+		delete from smbms_user where id=#{id}
+	</delete>
+	
+	<resultMap type="User" id="userRoleResult">  <!--User字段-->
+		<id property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+		<result property="userRole" column="userRole"/>
+
+		<association property="role" javaType="Role">  <!--role字段-->
+			<id property="id" column="r_id"/>
+			<result property="roleCode" column="roleCode"/>
+			<result property="roleName" column="roleName"/>
+		</association>
+
+	</resultMap>
+	<select id="getUserListByRoleId" parameterType="Integer" resultMap="userRoleResult">
+	select u.*,r.id as r_id,r.roleCode,r.roleName from smbms_user u,smbms_role r where u.userRole=#{userRole} and u.userRole=r.id
+	</select>
+
+
+	<resultMap id="userAddressResult" type="User">
+		<id property="id" column="id"/>
+		<result property="userCode" column="userCode"/>
+		<result property="userName" column="userName"/>
+
+		<collection property="addressList" ofType="Address">
+		<id property="id" column="a_id"/>
+		<result property="postCode" column="postCode"/>
+		<result property="tel" column="tel"/>
+		<result property="contact" column="contact"/>
+		<result property="addressDesc" column="addressDesc"/>
+		</collection>
+
+	</resultMap>
+
+	<select id="getAddressListByUserId" parameterType="User" resultMap="userAddressResult">
+    select u.*,a.id as a_id,a.contact,a.addressDesc,a.postCode,a.tel from smbms_user u,smbms_address a where u.id=a.userId and u.id=#{id}
+	</select>
+	
+
+	<!--<resultMap id="bill" type="SmbmsBill">
+		<id property="id" column="id"/>
+		<result property="billCode" column="billCode"/>
+		<result property="productName" column="productName"/>
+		<result property="providerName" column="proName"/>
+		<result property="totalPrice" column="totalPrice"/>
+		<result property="isPayment" column="isPayment"/>
+		<result property="creationDate" column="creationDate"/>
+
+	</resultMap>
+
+	<select id="cx" parameterType="SmbmsBill" resultMap="bill">
+		select b.*,p.proName from smbms_bill b,smbms_provider p  where productName like concat('%',#{productName},'%')
+		and b.providerId=#{providerId} and b.isPayment=#{isPayment} and b.providerId=p.id
+</select>-->
+
+	<resultMap id="bill" type="SmbmsBill">
+	<id property="id" column="id"/>
+	<result property="billCode" column="billCode"/>
+	<result property="productName" column="productName"/>
+	<result property="totalPrice" column="totalPrice"/>
+	<result property="isPayment" column="isPayment"/>
+	<result property="creationDate" column="creationDate"/>
+		
+		<association property="smbmsProvider" javaType="SmbmsProvider">
+			<id property="id" column="a_id"/>
+			<result property="proName" column="proName"/>
+		</association>
+	</resultMap>
+
+
+	<select id="cx" parameterType="SmbmsBill" resultMap="bill">
+		select b.*,p.id as a_id ,p.proName  from smbms_bill b,smbms_provider p  where b.providerId=p.id
+		 <if test="productName!=null and productName=''">
+			  and productName like concat('%',#{productName},'%')
+		 </if>
+		 <if test="providerId!=null">
+			 and b.providerId=#{providerId}
+		 </if>
+		 <if test="isPayment!=null">
+			 and b.isPayment=#{isPayment}
+		 </if>
+
+</select>
+
+
+
+	
+	<insert id="zyadd" parameterType="User">
+		insert into smbms_provider(id,proCode,proName,proDesc,proContact,proPhone)value
+		(#{id},#{proCode},#{proName},#{proDesc},#{proContact},#{proPhone})
+
+	</insert>
+
+
+<!--<update id="zyxg" parameterType="User">
+update smbms_provider
+	<set>
+		<if test="proCode!=null">
+			proCode=#{proCode},
+		</if>
+		<if test="proName!=null">
+			proName=#{proName},
+		</if>
+		<if test="proDesc!=null">
+			proDesc=#{proDesc},
+		</if>
+		<if test="proContact!=null">
+			proContact=#{proContact},
+		</if>
+		<if test="proPhone!=null">
+			proPhone=#{proPhone},
+		</if>
+		<if test="proAddress!=null">
+			proAddress=#{proAddress},
+		</if>
+		<if test="proFax!=null">
+			proFax=#{proFax},
+		</if>
+		<if test="createdBy!=null">
+			createdBy=#{createdBy},
+		</if>
+		<if test="creationDate!=null">
+			creationDate=#{creationDate},
+		</if>
+		<if test="modifyBy!=null">
+			modifyBy=#{modifyBy},
+		</if>
+		<if test="modifyDate!=null">
+			modifyDate=#{modifyDate},
+		</if>
+	</set>
+	where id=#{id}
+</update>-->
+
+	<update id="zyxg" parameterType="User">
+		update smbms_provider
+		<trim prefix="set" suffixOverrides="," suffix="where id=#{id}">
+			<if test="proCode!=null">
+				proCode=#{proCode},
+			</if>
+			<if test="proName!=null">
+				proName=#{proName},
+			</if>
+			<if test="proDesc!=null">
+				proDesc=#{proDesc},
+			</if>
+			<if test="proContact!=null">
+				proContact=#{proContact},
+			</if>
+			<if test="proPhone!=null">
+				proPhone=#{proPhone},
+			</if>
+			<if test="proAddress!=null">
+				proAddress=#{proAddress},
+			</if>
+			<if test="proFax!=null">
+				proFax=#{proFax},
+			</if>
+			<if test="createdBy!=null">
+				createdBy=#{createdBy},
+			</if>
+			<if test="creationDate!=null">
+				creationDate=#{creationDate},
+			</if>
+			<if test="modifyBy!=null">
+				modifyBy=#{modifyBy},
+			</if>
+			<if test="modifyDate!=null">
+				modifyDate=#{modifyDate},
+			</if>
+		</trim>
+
+	</update>
+
+	<delete id="zysc" parameterType="User">
+		delete from smbms_provider where id=#{id}
+	</delete>
+
+
+
+	<resultMap id="buill" type="SmbmsBill">
+		<result property="billCode" column="billCode"/>
+		<result property="productName" column="productName"/>
+		<result property="totalPrice" column="totalPrice"/>
+		<result property="isPayment" column="isPayment"/>
+
+		<collection property="smbmsProviderList" ofType="SmbmsProvider">
+			<result property="id" column="id"/>
+			<result property="proName" column="proName"/>
+			<result property="proCode" column="proCode"/>
+			<result property="proContact" column="proContact"/>
+			<result property="proPhone" column="proPhone"/>
+
+		</collection>
+
+	</resultMap>
+
+	<select id="billList" parameterType="SmbmsBill" resultMap="buill">
+	SELECT p.id,p.proCode,p.proContact,p.proName,p.proPhone,b.billCode,b.productName,b.totalPrice,b.isPayment
+   FROM smbms_bill b,smbms_provider p
+   WHERE p.id=#{id} AND b.providerId=p.id;
+	</select>
+	
+	<select id="gys" resultType="SmbmsProvider">
+		select * from smbms_provider
+		<where>
+			<if test="proCode">
+			proCode like concat('%',#{proCode},'%')
+			</if>
+			<if test="proName">
+				and proName like concat('%',#{proName},'%')
+			</if>
+		</where>
+	</select>
+
+	<select id="jd" resultType="SmbmsProvider">
+		select * from smbms_provider where createdBy in
+		<foreach collection="array" item="createdBy" open="(" separator="," close=")">
+		#{createdBy}
+		</foreach>
+	</select>
+
+</mapper>
